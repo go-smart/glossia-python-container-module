@@ -47,10 +47,10 @@ class StatusUpdater:
             except ValueError:
                 pass
             else:
-                self.sendall(b'%lf|%s\n' % (percentage, message))
+                self._update_socket.sendall(b'%lf|%s\n' % (percentage, message))
                 return
 
-        self.sendall(b'%s\n' % message)
+        self._update_socket.sendall(b'%s\n' % message)
 
 update = StatusUpdater('/update.sock')
 update_available = update.connect()
