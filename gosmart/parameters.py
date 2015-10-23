@@ -83,8 +83,8 @@ class ParameterDict(AttributeDict):
     def __getitem__(self, attr):
         if attr not in declared_parameters:
             raise KeyError(
-                "You have asked for an undeclared parameter,\n"
-                "[%s]\n"
+                "You have asked for an undeclared parameter, "
+                "[%s], "
                 "please check your gosmart.setup(...) call." % attr
             )
 
