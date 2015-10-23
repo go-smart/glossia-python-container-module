@@ -19,6 +19,16 @@ import json
 import yaml
 import socket
 import os
+from gosmart.setup import _parameters as declared_parameters
+
+
+if declared_parameters is None:
+    raise RuntimeError(
+        "To load Go-Smart parameters, you should first run "
+        "gosmart.setup(parameters), where parameters is a "
+        "parameter definition YAML filename, a string list or "
+        "a dict, with string keys"
+    )
 
 with open('/shared/input/parameters.yml', 'r') as f:
     parameter_dict = yaml.safe_load(f)
@@ -69,6 +79,15 @@ class ParameterDict(AttributeDict):
 
     def __getattr__(self, attr):
         return self.__getitem__(attr)
+
+    def __getitem__(self, attr):
+        if attr not in declared_parameters:
+            raise KeyError(
+                "You have asked for an undeclared parameter, "
+                "please check your gosmart.setup(...) call."
+            )
+
+        return super(ParameterDict, self).__getitem__(attr)
 
     def __setitem__(self, attr, value):
         param = convert_parameter(value[1], value[0])
