@@ -19,7 +19,7 @@ import json
 import yaml
 import socket
 import os
-from gosmart.setup import _parameters as declared_parameters
+from gosmart import _parameters as declared_parameters
 
 
 if declared_parameters is None:
