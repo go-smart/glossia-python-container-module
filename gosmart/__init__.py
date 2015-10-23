@@ -13,8 +13,8 @@ def setup(parameters):
                 _parameters = _parameter_info.keys()
         except Exception as e:
             raise RuntimeError(
-                "Go-Smart setup argument appears to be a string "
-                "but we cannot read parameters from it: %s" % repr(e)
+                "Go-Smart setup argument appears to be a string\n"
+                "(%s)\nbut we cannot read parameters from it: %s" % (parameters, repr(e))
             )
     else:
         try:
