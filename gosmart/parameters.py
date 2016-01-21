@@ -62,7 +62,7 @@ class StatusUpdater:
 
         self._update_socket.sendall(b'%s\n' % message)
 
-update = StatusUpdater('/update.sock')
+update = StatusUpdater('/shared/update.sock')
 update_available = update.connect()
 
 
