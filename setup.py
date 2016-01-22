@@ -9,7 +9,7 @@ providing simple, in-container tools for authors of GSSA families, that
 is Docker-sandboxed simulation codes.
 """
 LICENSE = "MIT License"
-URL = "https://github.com/numa-engineering/gosmart-gssa_container-module"
+URL = "https://github.com/gosmart/gssa-container-module"
 AUTHOR = "Phil Weir"
 EMAIL = "phil.weir@numa.ie"
 PACKAGES = find_packages(exclude=["tests*"])
@@ -31,7 +31,7 @@ CLASSIFIERS = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-INSTALL_REQUIRES = []
+INSTALL_REQUIRES = ['Click', 'pyyaml', 'hachiko']
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -49,5 +49,10 @@ if __name__ == "__main__":
         packages=PACKAGES,
         zip_safe=False,
         classifiers=CLASSIFIERS,
-        install_requires=INSTALL_REQUIRES
+        install_requires=INSTALL_REQUIRES,
+        include_package_data=True,
+        entry_points='''
+            [console_scripts]
+            gosling=gosmart.scripts.gosling:cli
+        '''
     )
