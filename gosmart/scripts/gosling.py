@@ -62,15 +62,19 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
 
                 tar.extractall(path=target_directory)
 
-            location = os.path.join(target_directory, self._target)
-            if not os.path.exists(location):
-                logging.error("This archive is missing a %s" % self._target)
-        else:
-            location = os.path.join(location, self._target)
+            location = target_directory
 
+        if self._target:
+            location = os.path.join(location, self._target)
+            if not os.path.exists(location):
+                logging.error("Missing a %s" % self._target)
+        else:
+            location = ''
+
+        command = [self._interpreter, location] if self._interpreter else [location]
         try:
             self.process = asyncio.create_subprocess_exec(
-                *["/usr/bin/python", location],
+                *command,
                 stdout=open(log_file, 'w'),
                 stderr=open(err_file, 'w'),
                 cwd=target_directory
@@ -122,8 +126,8 @@ def run(loop, target, interpreter, archive):
 
 
 @click.command()
-@click.option('--target', default='start.py', help='script or executable to run (rel. to input folder/start-archive if applicable)')
-@click.option('--interpreter', default='/usr/bin/python3', help='interpreter to use for running target')
+@click.option('--target', default=None, help='script or executable to run (rel. to input folder/start-archive if applicable)')
+@click.option('--interpreter', default=None, help='interpreter to use for running target')
 @click.option('--archive', default=None, help='watch for start-archive instead of single file')
 def cli(target, interpreter, archive):
     """Manage a single script run for docker-launch"""
