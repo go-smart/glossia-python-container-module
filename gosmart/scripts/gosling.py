@@ -11,19 +11,19 @@ from watchdog.events import PatternMatchingEventHandler
 input_directory = '/shared/input'
 output_directory = '/shared/output'
 log_directory = '/shared/output/logs'
-start_script = 'start.py'
 
 
 class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
     active = False
 
-    def __init__(self, exit, magic_script_pattern, loop=None, **kwargs):
+    def __init__(self, exit, target, interpreter, archive, loop=None, **kwargs):
         self._exit = exit
 
-        script_location = os.path.join(input_directory, magic_script_pattern)
+        self._archive = archive
+        self._target = target
 
         patterns = kwargs['patterns'] if 'patterns' in kwargs else []
-        patterns.append(script_location)
+        patterns.append('input')
         kwargs['patterns'] = patterns
 
         logging.info('Patterns: %s' % str(kwargs['patterns']))
@@ -31,19 +31,13 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
         AIOEventHandler.__init__(self, loop)
         PatternMatchingEventHandler.__init__(self, **kwargs)
 
-        if os.path.exists(script_location):
-            self._loop.call_soon_threadsafe(
-                asyncio.async,
-                self.handle_exists(script_location, os.path.isdir(script_location))
-            )
-
     @asyncio.coroutine
     def on_moved(self, event):
         if event.dest_path.endswith('/input'):
-            yield from self.handle_exists(os.path.join(event.dest_path, 'start.tar.gz'), event.is_directory)
+            yield from self.handle_exists(event.dest_path)
 
     @asyncio.coroutine
-    def handle_exists(self, location, is_directory):
+    def handle_exists(self, location):
         logging.info("Spotted new start script")
 
         if self.active:
@@ -59,17 +53,20 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
         except FileExistsError:
             pass
 
-        with tarfile.open(location) as tar:
-            for name in tar.getnames():
-                if not os.path.abspath(os.path.join(target_directory, name)).startswith(target_directory):
-                    logging.error("This archive contains unsafe filenames: %s %s" % (os.path.abspath(os.path.join(target_directory, name)), target_directory))
-                    return
+        if self._archive:
+            with tarfile.open(os.path.join(location, self._archive)) as tar:
+                for name in tar.getnames():
+                    if not os.path.abspath(os.path.join(target_directory, name)).startswith(target_directory):
+                        logging.error("This archive contains unsafe filenames: %s %s" % (os.path.abspath(os.path.join(target_directory, name)), target_directory))
+                        return
 
-            tar.extractall(path=target_directory)
+                tar.extractall(path=target_directory)
 
-        location = os.path.join(target_directory, start_script)
-        if not os.path.exists(location):
-            logging.error("This archive is missing a %s" % start_script)
+            location = os.path.join(target_directory, self._target)
+            if not os.path.exists(location):
+                logging.error("This archive is missing a %s" % self._target)
+        else:
+            location = os.path.join(location, self._target)
 
         try:
             self.process = asyncio.create_subprocess_exec(
@@ -113,10 +110,10 @@ def exit(loop, observer, future=None):
 
 
 @asyncio.coroutine
-def run(loop, magic_script):
+def run(loop, target, interpreter, archive):
     observer = Observer()
 
-    event_handler = DockerInnerHandler(partial(exit, loop, observer), magic_script, loop=loop)
+    event_handler = DockerInnerHandler(partial(exit, loop, observer), target, interpreter, archive, loop=loop)
 
     observer.schedule(event_handler, '/shared')
     observer.start()
@@ -125,10 +122,11 @@ def run(loop, magic_script):
 
 
 @click.command()
-def cli():
+@click.option('--target', default='start.py', help='script or executable to run (rel. to input folder/start-archive if applicable)')
+@click.option('--interpreter', default='/usr/bin/python3', help='interpreter to use for running target')
+@click.option('--archive', default='start.tar.gz', help='watch for start-archive instead of single file')
+def cli(target, interpreter, archive):
     """Manage a single script run for docker-launch"""
-
-    magic_script = "start.tar.gz"
 
     os.makedirs(log_directory)
 
@@ -142,7 +140,7 @@ def cli():
 
     loop = asyncio.get_event_loop()
 
-    asyncio.async(run(loop, magic_script))
+    asyncio.async(run(loop, target, interpreter, archive))
 
     try:
         loop.run_forever()
