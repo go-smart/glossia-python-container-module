@@ -124,7 +124,7 @@ def run(loop, target, interpreter, archive):
 @click.command()
 @click.option('--target', default='start.py', help='script or executable to run (rel. to input folder/start-archive if applicable)')
 @click.option('--interpreter', default='/usr/bin/python3', help='interpreter to use for running target')
-@click.option('--archive', default='start.tar.gz', help='watch for start-archive instead of single file')
+@click.option('--archive', default=None, help='watch for start-archive instead of single file')
 def cli(target, interpreter, archive):
     """Manage a single script run for docker-launch"""
 
