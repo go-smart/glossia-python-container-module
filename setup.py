@@ -1,4 +1,5 @@
 import os
+import sys
 
 from setuptools import setup, find_packages
 
@@ -12,9 +13,20 @@ LICENSE = "MIT License"
 URL = "https://github.com/gosmart/gssa-container-module"
 AUTHOR = "Phil Weir"
 EMAIL = "phil.weir@numa.ie"
-PACKAGES = find_packages(exclude=["tests*"])
 META_PATH = os.path.join("gosmart", "__init__.py")
 KEYWORDS = ["gssa", "gosmart", "simulation", "docker"]
+
+if sys.version_info < (3,):
+    excluded_packages = ["gosmart.script"]
+    entry_points = ""
+else:
+    excluded_packages = []
+    entry_points = '''
+        [console_scripts]
+        gosling=gosmart.scripts.gosling:cli
+    '''
+
+PACKAGES = find_packages(exclude=["tests*"] + excluded_packages)
 
 # Note that this Python module is MIT licensed, unlike most of GSSA,
 # as it allows code developers to write their own self-contained
@@ -51,8 +63,5 @@ if __name__ == "__main__":
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
         include_package_data=True,
-        entry_points='''
-            [console_scripts]
-            gosling=gosmart.scripts.gosling:cli
-        '''
+        entry_points=entry_points
     )
