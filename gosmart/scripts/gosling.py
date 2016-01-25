@@ -86,6 +86,7 @@ def execute(location, loop, target, interpreter, archive, exit):
     err_file = os.path.join(log_directory, 'job.err')
 
     command = [interpreter, location] if interpreter else [location]
+    logging.info("Running user command: {command}".format(command=" ".join(command)))
     try:
         process = asyncio.create_subprocess_exec(
             *command,
@@ -95,7 +96,6 @@ def execute(location, loop, target, interpreter, archive, exit):
         )
         process = yield from process
         asyncio.async(process.wait()).add_done_callback(exit)
-
     except Exception as e:
         logging.error("Exception raised launching user script: %s"
                       % str(e))
@@ -103,6 +103,7 @@ def execute(location, loop, target, interpreter, archive, exit):
 
 
 def exit(loop, observer=None, future=None):
+    logging.info("Exiting post-user-command")
     exit_file = os.path.join(log_directory, 'exit_status')
 
     with open(exit_file, 'w') as f:

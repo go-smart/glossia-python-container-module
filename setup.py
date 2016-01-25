@@ -15,6 +15,8 @@ AUTHOR = "Phil Weir"
 EMAIL = "phil.weir@numa.ie"
 META_PATH = os.path.join("gosmart", "__init__.py")
 KEYWORDS = ["gssa", "gosmart", "simulation", "docker"]
+INSTALL_REQUIRES = ['pyyaml']
+INSTALL_REQUIRES_3 = ['Click', 'pyyaml', 'hachiko']
 
 if sys.version_info < (3,):
     excluded_packages = ["gosmart.script"]
@@ -25,6 +27,7 @@ else:
         [console_scripts]
         gosling=gosmart.scripts.gosling:cli
     '''
+    INSTALL_REQUIRES += INSTALL_REQUIRES_3
 
 PACKAGES = find_packages(exclude=["tests*"] + excluded_packages)
 
@@ -43,7 +46,6 @@ CLASSIFIERS = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-INSTALL_REQUIRES = ['Click', 'pyyaml', 'hachiko']
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
