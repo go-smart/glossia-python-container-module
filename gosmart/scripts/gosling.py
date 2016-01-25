@@ -44,49 +44,55 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
             logging.error("Already started a script")
             return
 
-        log_file = os.path.join(log_directory, 'job.out')
-        err_file = os.path.join(log_directory, 'job.err')
+        yield from execute(location, self._loop, self._target, self._interpreter, self._archive, self._exit)
 
-        target_directory = os.path.join(output_directory, 'run')
-        try:
-            os.makedirs(target_directory)
-        except FileExistsError:
-            pass
+        self.active = True
 
-        if self._archive:
-            with tarfile.open(os.path.join(location, self._archive)) as tar:
-                for name in tar.getnames():
-                    if not os.path.abspath(os.path.join(target_directory, name)).startswith(target_directory):
-                        logging.error("This archive contains unsafe filenames: %s %s" % (os.path.abspath(os.path.join(target_directory, name)), target_directory))
-                        return
 
-                tar.extractall(path=target_directory)
+@asyncio.coroutine
+def execute(location, loop, target, interpreter, archive, exit):
+    target_directory = os.path.join(output_directory, 'run')
+    try:
+        os.makedirs(target_directory)
+    except FileExistsError:
+        pass
 
-            location = target_directory
+    if archive:
+        with tarfile.open(os.path.join(location, archive)) as tar:
+            for name in tar.getnames():
+                if not os.path.abspath(os.path.join(target_directory, name)).startswith(target_directory):
+                    logging.error("This archive contains unsafe filenames: %s %s" % (os.path.abspath(os.path.join(target_directory, name)), target_directory))
+                    return
 
-        if self._target:
-            location = os.path.join(location, self._target)
-            if not os.path.exists(location):
-                logging.error("Missing a %s" % self._target)
-        else:
-            location = ''
+            tar.extractall(path=target_directory)
 
-        command = [self._interpreter, location] if self._interpreter else [location]
-        try:
-            self.process = asyncio.create_subprocess_exec(
-                *command,
-                stdout=open(log_file, 'w'),
-                stderr=open(err_file, 'w'),
-                cwd=target_directory
-            )
-            process = yield from self.process
-            asyncio.async(process.wait()).add_done_callback(self._exit)
+        location = target_directory
 
-            self.active = True
-        except Exception as e:
-            logging.error("Exception raised launching user script: %s"
-                          % str(e))
-            self._loop.call_soon_threadsafe(partial(self._exit, None))
+    if target:
+        location = os.path.join(location, target)
+        if not os.path.exists(location):
+            logging.error("Missing a %s" % target)
+    else:
+        location = ''
+
+    log_file = os.path.join(log_directory, 'job.out')
+    err_file = os.path.join(log_directory, 'job.err')
+
+    command = [interpreter, location] if interpreter else [location]
+    try:
+        process = asyncio.create_subprocess_exec(
+            *command,
+            stdout=open(log_file, 'w'),
+            stderr=open(err_file, 'w'),
+            cwd=target_directory
+        )
+        process = yield from process
+        asyncio.async(process.wait()).add_done_callback(exit)
+
+    except Exception as e:
+        logging.error("Exception raised launching user script: %s"
+                      % str(e))
+        loop.call_soon_threadsafe(partial(exit, None))
 
 
 def exit(loop, observer, future=None):
@@ -129,6 +135,7 @@ def run(loop, target, interpreter, archive):
 @click.option('--target', default=None, help='script or executable to run (rel. to input folder/start-archive if applicable)')
 @click.option('--interpreter', default=None, help='interpreter to use for running target')
 @click.option('--archive', default=None, help='watch for start-archive instead of single file')
+@click.option('--override', is_flag=True, help='go straight to execution')
 def cli(target, interpreter, archive):
     """Manage a single script run for docker-launch"""
 
