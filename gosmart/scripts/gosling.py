@@ -151,7 +151,7 @@ def run(loop, target, interpreter, archive):
 def cli(target, interpreter, archive, override):
     """Manage a single script run for docker-launch"""
 
-    os.makedirs(log_directory)
+    os.makedirs(log_directory, exists_ok=True)
 
     logfile_handler = logging.FileHandler(os.path.join(log_directory, "docker_inner.log"))
     logging.getLogger().addHandler(logfile_handler)
