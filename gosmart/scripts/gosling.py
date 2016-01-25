@@ -148,7 +148,8 @@ def run(loop, target, interpreter, archive):
 @click.option('--interpreter', default=None, help='interpreter to use for running target')
 @click.option('--archive', default=None, help='watch for start-archive instead of single file')
 @click.option('--override', is_flag=True, help='go straight to execution')
-def cli(target, interpreter, archive, override):
+@click.option('--final', default='output', help='location of the final output directory to be sent to GSSA, rel. to /shared')
+def cli(target, interpreter, archive, override, final):
     """Manage a single script run for docker-launch"""
 
     os.makedirs(log_directory, exists_ok=True)
@@ -174,6 +175,6 @@ def cli(target, interpreter, archive, override):
 
     logging.info('Moving output to final location')
 
-    os.rename(os.path.join('/shared', 'output'), os.path.join('/shared', 'output.final'))
+    os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.final'))
 
     logging.info('Loop closed and exiting...')
