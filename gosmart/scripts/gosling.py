@@ -153,7 +153,7 @@ def cli(target, interpreter, archive, override):
     os.makedirs(log_directory)
 
     logfile_handler = logging.FileHandler(os.path.join(log_directory, "docker_inner.log"))
-    logging.addHandler(logfile_handler)
+    logging.getLogger().addHandler(logfile_handler)
 
     logging.info("Starting up...")
 
