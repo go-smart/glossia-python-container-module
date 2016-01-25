@@ -19,7 +19,7 @@ INSTALL_REQUIRES = ['pyyaml']
 INSTALL_REQUIRES_3 = ['Click', 'pyyaml', 'hachiko']
 
 if sys.version_info < (3,):
-    excluded_packages = ["gosmart.script"]
+    excluded_packages = ["gosmart.scripts.*"]
     entry_points = ""
 else:
     excluded_packages = []
