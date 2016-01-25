@@ -95,7 +95,7 @@ def execute(location, loop, target, interpreter, archive, exit):
         loop.call_soon_threadsafe(partial(exit, None))
 
 
-def exit(loop, observer, future=None):
+def exit(loop, observer=None, future=None):
     exit_file = os.path.join(log_directory, 'exit_status')
 
     with open(exit_file, 'w') as f:
@@ -112,11 +112,15 @@ def exit(loop, observer, future=None):
         else:
             f.write('0\nOK')
 
-    observer.stop()
+    if observer:
+        observer.stop()
     loop.stop()
+
     logging.info("Stopped event loop")
-    observer.join()
-    logging.info("Observer exited")
+
+    if observer:
+        observer.join()
+        logging.info("Observer exited")
 
 
 @asyncio.coroutine
@@ -136,7 +140,7 @@ def run(loop, target, interpreter, archive):
 @click.option('--interpreter', default=None, help='interpreter to use for running target')
 @click.option('--archive', default=None, help='watch for start-archive instead of single file')
 @click.option('--override', is_flag=True, help='go straight to execution')
-def cli(target, interpreter, archive):
+def cli(target, interpreter, archive, override):
     """Manage a single script run for docker-launch"""
 
     os.makedirs(log_directory)
@@ -147,11 +151,16 @@ def cli(target, interpreter, archive):
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
-    logging.info('Starting up...')
+    logging.info("Starting up...")
 
     loop = asyncio.get_event_loop()
 
-    asyncio.async(run(loop, target, interpreter, archive))
+    if override:
+        logging.info("Instructed to override input-waiting")
+        exit_cb = partial(exit, loop, None)
+        asyncio.async(execute('', loop, target, interpreter, archive, exit_cb))
+    else:
+        asyncio.async(run(loop, target, interpreter, archive))
 
     try:
         loop.run_forever()
