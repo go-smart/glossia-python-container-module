@@ -8,6 +8,12 @@ from hachiko.hachiko import AIOEventHandler
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logging.getLogger().addHandler(logging.StreamHandler())
+
 input_directory = '/shared/input'
 output_directory = '/shared/output'
 log_directory = '/shared/output/logs'
@@ -21,6 +27,7 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
 
         self._archive = archive
         self._target = target
+        self._interpreter = interpreter
 
         patterns = kwargs['patterns'] if 'patterns' in kwargs else []
         patterns.append('input')
@@ -145,11 +152,8 @@ def cli(target, interpreter, archive, override):
 
     os.makedirs(log_directory)
 
-    logging.basicConfig(
-        filename=os.path.join(log_directory, "docker_inner.log"),
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    logfile_handler = logging.FileHandler(os.path.join(log_directory, "docker_inner.log"))
+    logging.addHandler(logfile_handler)
 
     logging.info("Starting up...")
 
