@@ -85,7 +85,7 @@ def execute(location, loop, target, interpreter, archive, exit):
     log_file = os.path.join(log_directory, 'job.out')
     err_file = os.path.join(log_directory, 'job.err')
 
-    command = [interpreter, location] if interpreter else [location]
+    command = (interpreter.split(' ') if interpreter else []) + [location]
     logging.info("Running user command: {command}".format(command=" ".join(command)))
     try:
         process = asyncio.create_subprocess_exec(
