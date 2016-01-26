@@ -164,7 +164,7 @@ def cli(target, interpreter, archive, override, final):
     if override:
         logging.info("Instructed to override input-waiting")
         exit_cb = partial(exit, loop, None)
-        asyncio.async(execute('', loop, target, interpreter, archive, exit_cb))
+        asyncio.async(execute('/shared/input', loop, target, interpreter, archive, exit_cb))
     else:
         asyncio.async(run(loop, target, interpreter, archive))
 
