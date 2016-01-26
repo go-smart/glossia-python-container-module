@@ -62,7 +62,12 @@ class StatusUpdater:
 
         self._update_socket.sendall(b'%s\n' % message)
 
-update = StatusUpdater('/shared/update.sock')
+if 'GSSA_STATUS_SOCKET' in os.environ:
+    update_socket = os.environ['GSSA_STATUS_SOCKET']
+else:
+    update_socket = '/shared/update.sock'
+
+update = StatusUpdater(update_socket)
 update_available = update.connect()
 
 
