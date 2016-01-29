@@ -165,11 +165,12 @@ class Region:
             self.meshed_as = None
 
 
-R = AttributeDict({k: Region(v) for k, v in region_dict.items()})
-R.group = Region.group
-R.meshed_as = Region.meshed_as
-R.zone = Region.zone
-R.surface = Region.surface
+def _initiate_region_dict():
+    R = AttributeDict({k: Region(v) for k, v in region_dict.items()})
+    R.group = Region.group
+    R.meshed_as = Region.meshed_as
+    R.zone = Region.zone
+    R.surface = Region.surface
 
 
 def convert_parameter(parameter, typ=None, try_json=True):
@@ -208,6 +209,11 @@ def convert_parameter(parameter, typ=None, try_json=True):
     return parameter
 
 
-P = ParameterDict()
-P.update(parameter_dict)
-NP = {k: ParameterDict(v) for k, v in needle_parameter_dicts.items()}
+def _initiate_parameter_dict():
+    P = ParameterDict()
+    P.update(parameter_dict)
+    NP = {k: ParameterDict(v) for k, v in needle_parameter_dicts.items()}
+    return P, NP
+
+R = _initiate_region_dict()
+P, NP = _initiate_parameter_dict()
