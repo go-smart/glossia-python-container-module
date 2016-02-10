@@ -39,6 +39,22 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
         AIOEventHandler.__init__(self, loop)
         PatternMatchingEventHandler.__init__(self, **kwargs)
 
+        if os.path.exists('/shared/input'):
+            asyncio.async(self.execute('/shared/input'))
+
+    @asyncio.coroutine
+    def execute(self, location):
+        self.active = True
+
+        yield from execute(
+            location,
+            self._loop,
+            self._target,
+            self._interpreter,
+            self._archive,
+            self._exit
+        )
+
     @asyncio.coroutine
     def on_moved(self, event):
         if event.dest_path.endswith('/input'):
@@ -52,9 +68,7 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
             logging.error("Already started a script")
             return
 
-        yield from execute(location, self._loop, self._target, self._interpreter, self._archive, self._exit)
-
-        self.active = True
+        yield from self.execute(location)
 
 
 @asyncio.coroutine
