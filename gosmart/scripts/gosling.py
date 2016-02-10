@@ -3,6 +3,7 @@ import click
 import logging
 import asyncio
 import tarfile
+import time
 from functools import partial
 from hachiko.hachiko import AIOEventHandler
 from watchdog.observers import Observer
@@ -148,8 +149,9 @@ def run(loop, target, interpreter, archive):
 @click.option('--interpreter', default=None, help='interpreter to use for running target')
 @click.option('--archive', default=None, help='watch for start-archive instead of single file')
 @click.option('--override', is_flag=True, help='go straight to execution')
+@click.option('--delay', default=0, help='wait for N secs before starting watching')
 @click.option('--final', default='output', help='location of the final output directory to be sent to GSSA, rel. to /shared')
-def cli(target, interpreter, archive, override, final):
+def cli(target, interpreter, archive, override, delay, final):
     """Manage a single script run for docker-launch"""
 
     os.makedirs(log_directory, exist_ok=True)
@@ -166,6 +168,8 @@ def cli(target, interpreter, archive, override, final):
         exit_cb = partial(exit, loop, None)
         asyncio.async(execute('/shared/input', loop, target, interpreter, archive, exit_cb))
     else:
+        if delay:
+            time.sleep(delay)
         asyncio.async(run(loop, target, interpreter, archive))
 
     try:
