@@ -193,6 +193,9 @@ def cli(target, interpreter, archive, override, delay, final):
 
     logging.info('Moving output to final location')
 
-    os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.final'))
+    # This two-step approach ensures copying to Glossia is triggered by a move in shared/ and that
+    # everything is on the same FS etc. before it happens
+    os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.tmp'))
+    os.rename(os.path.join('/shared', 'output.tmp'), os.path.join('/shared', 'output.final'))
 
     logging.info('Loop closed and exiting...')
