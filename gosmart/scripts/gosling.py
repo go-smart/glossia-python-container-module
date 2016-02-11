@@ -1,4 +1,6 @@
 import os
+import sys
+
 import click
 import logging
 import asyncio
@@ -23,11 +25,12 @@ log_directory = '/shared/output/logs'
 class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
     active = False
 
-    def __init__(self, exit, target, interpreter, archive, loop=None, **kwargs):
+    def __init__(self, exit, target, interpreter, archive, passthrough, loop=None, **kwargs):
         self._exit = exit
 
         self._archive = archive
         self._target = target
+        self._passthrough = passthrough
         self._interpreter = interpreter
 
         patterns = kwargs['patterns'] if 'patterns' in kwargs else []
@@ -52,7 +55,8 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
             self._target,
             self._interpreter,
             self._archive,
-            self._exit
+            self._exit,
+            self._passthrough
         )
 
     @asyncio.coroutine
@@ -72,7 +76,7 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
 
 
 @asyncio.coroutine
-def execute(location, loop, target, interpreter, archive, exit):
+def execute(location, loop, target, interpreter, archive, exit, passthrough=False):
     target_directory = os.path.join(output_directory, 'run')
     try:
         os.makedirs(target_directory)
@@ -103,10 +107,15 @@ def execute(location, loop, target, interpreter, archive, exit):
     command = (interpreter.split(' ') if interpreter else []) + [location]
     logging.info("Running user command: {command}".format(command=" ".join(command)))
     try:
+        if passthrough:
+            stdout, stderr = sys.stdout, sys.stderr
+        else:
+            stdout, stderr = open(log_file, 'w'), open(err_file, 'w')
+
         process = asyncio.create_subprocess_exec(
             *command,
-            stdout=open(log_file, 'w'),
-            stderr=open(err_file, 'w'),
+            stdout=stdout,
+            stderr=stderr,
             cwd=target_directory
         )
         process = yield from process
@@ -147,10 +156,10 @@ def exit(loop, observer=None, future=None):
 
 
 @asyncio.coroutine
-def run(loop, target, interpreter, archive):
+def run(loop, target, interpreter, archive, passthrough):
     observer = Observer()
 
-    event_handler = DockerInnerHandler(partial(exit, loop, observer), target, interpreter, archive, loop=loop)
+    event_handler = DockerInnerHandler(partial(exit, loop, observer), target, interpreter, archive, passthrough, loop=loop)
 
     observer.schedule(event_handler, '/shared')
     observer.start()
@@ -166,7 +175,8 @@ def run(loop, target, interpreter, archive):
 @click.option('--static', is_flag=True, help='do not think about third-party observation or moving output')
 @click.option('--delay', default=0, help='wait for N secs before starting watching')
 @click.option('--final', default='output', help='location of the final output directory to be sent to GSSA, rel. to /shared')
-def cli(target, interpreter, archive, override, static, delay, final):
+@click.option('--passthrough', is_flag=True, help='pass through subprocess output, rather than silently logging')
+def cli(target, interpreter, archive, override, static, delay, final, passthrough):
     """Manage a single script run for docker-launch"""
 
     os.makedirs(log_directory, exist_ok=True)
@@ -181,11 +191,11 @@ def cli(target, interpreter, archive, override, static, delay, final):
     if override:
         logging.info("Instructed to override input-waiting")
         exit_cb = partial(exit, loop, None)
-        asyncio.async(execute('/shared/input', loop, target, interpreter, archive, exit_cb))
+        asyncio.async(execute('/shared/input', loop, target, interpreter, archive, exit_cb, passthrough))
     else:
         if delay:
             time.sleep(delay)
-        asyncio.async(run(loop, target, interpreter, archive))
+        asyncio.async(run(loop, target, interpreter, archive, passthrough))
 
     try:
         loop.run_forever()
