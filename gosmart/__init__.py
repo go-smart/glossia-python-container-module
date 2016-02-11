@@ -6,6 +6,11 @@ _parameter_info = None
 
 def setup(parameters):
     global _parameters, _parameter_info
+
+    if parameters is False:
+        _parameters = False
+        return
+
     if isinstance(parameters, basestring):
         try:
             with open(parameters, 'r') as f:
