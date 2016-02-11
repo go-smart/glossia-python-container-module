@@ -163,9 +163,10 @@ def run(loop, target, interpreter, archive):
 @click.option('--interpreter', default=None, help='interpreter to use for running target')
 @click.option('--archive', default=None, help='watch for start-archive instead of single file')
 @click.option('--override', is_flag=True, help='go straight to execution')
+@click.option('--static', is_flag=True, help='do not think about third-party observation or moving output')
 @click.option('--delay', default=0, help='wait for N secs before starting watching')
 @click.option('--final', default='output', help='location of the final output directory to be sent to GSSA, rel. to /shared')
-def cli(target, interpreter, archive, override, delay, final):
+def cli(target, interpreter, archive, override, static, delay, final):
     """Manage a single script run for docker-launch"""
 
     os.makedirs(log_directory, exist_ok=True)
@@ -195,7 +196,8 @@ def cli(target, interpreter, archive, override, delay, final):
 
     # This two-step approach ensures copying to Glossia is triggered by a move in shared/ and that
     # everything is on the same FS etc. before it happens
-    os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.tmp'))
-    os.rename(os.path.join('/shared', 'output.tmp'), os.path.join('/shared', 'output.final'))
+    if not static:
+        os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.tmp'))
+        os.rename(os.path.join('/shared', 'output.tmp'), os.path.join('/shared', 'output.final'))
 
     logging.info('Loop closed and exiting...')
