@@ -29,7 +29,9 @@ else:
     '''
     INSTALL_REQUIRES += INSTALL_REQUIRES_3
 
+print(excluded_packages)
 PACKAGES = find_packages(exclude=["tests*"] + excluded_packages)
+print(PACKAGES)
 
 # Note that this Python module is MIT licensed, unlike most of GSSA,
 # as it allows code developers to write their own self-contained
