@@ -108,7 +108,7 @@ def execute(location, loop, target, interpreter, archive, exit, passthrough=Fals
     logging.info("Running user command: {command}".format(command=" ".join(command)))
     try:
         if passthrough:
-            stdout, stderr = sys.stdout, sys.stderr
+            stdout, stderr = sys.stdout, sys.stdout
         else:
             stdout, stderr = open(log_file, 'w'), open(err_file, 'w')
 
