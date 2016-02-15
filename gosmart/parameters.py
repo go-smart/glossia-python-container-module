@@ -89,7 +89,7 @@ region_dict = None
 def load():
     global R, P, NP, updatee, update_available, region_dict
 
-    loader = GoSmartParameterLoader('/shared/input')
+    loader = GoSmartParameterLoader('input')
     loader.initiate()
 
     R = loader.get_regions()
