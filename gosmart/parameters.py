@@ -19,6 +19,7 @@ from __future__ import print_function
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import yaml
 import os
+import gosmart
 from gosmart.dicts import AttributeDict, ParameterDict
 from gosmart.region import Region
 import gosmart.status
@@ -48,14 +49,15 @@ class GoSmartParameterLoader:
         return self._region_dict
 
     def _load_parameters(self):
-        with open(os.path.join(self._prefix, 'parameters.yml'), 'r') as f:
-            self._parameter_dict = yaml.safe_load(f)
+        if gosmart._parameters is not False:
+            with open(os.path.join(self._prefix, 'parameters.yml'), 'r') as f:
+                self._parameter_dict = yaml.safe_load(f)
+
+            with open(os.path.join(self._prefix, 'needle_parameters.yml'), 'r') as f:
+                self._needle_parameter_dicts = dict({v['index']: v['parameters'] for v in yaml.safe_load_all(f)})
 
         with open(os.path.join(self._prefix, 'regions.yml'), 'r') as f:
             self._region_dict = yaml.safe_load(f)
-
-        with open(os.path.join(self._prefix, 'needle_parameters.yml'), 'r') as f:
-            self._needle_parameter_dicts = dict({v['index']: v['parameters'] for v in yaml.safe_load_all(f)})
 
     def initiate(self):
         self._load_parameters()
@@ -99,5 +101,6 @@ def load():
 
     update = gosmart.status.StatusUpdater()
     update_available = update.connect()
+
 
 load()
