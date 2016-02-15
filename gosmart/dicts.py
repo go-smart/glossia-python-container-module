@@ -35,7 +35,7 @@ class ParameterDict(AttributeDict):
         super(ParameterDict, self).update({k: convert_parameter(v[1], v[0]) for k, v in update_dict.items()})
 
 
-if gosmart.parameters is None:
+if gosmart._parameters is None:
     try:
         gosmart.setup('parameters.yml')
     except Exception as e:
@@ -52,4 +52,4 @@ if gosmart.parameters is None:
                 "a dict, with string keys."
             )
 
-declared_parameters = gosmart.parameters
+declared_parameters = gosmart._parameters
