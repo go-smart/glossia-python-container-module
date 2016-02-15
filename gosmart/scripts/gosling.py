@@ -6,6 +6,7 @@ import logging
 import asyncio
 import tarfile
 import time
+import shutil
 from functools import partial
 from hachiko.hachiko import AIOEventHandler
 from watchdog.observers import Observer
@@ -78,19 +79,26 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
 @asyncio.coroutine
 def execute(location, loop, target, interpreter, archive, exit, passthrough=False):
     target_directory = os.path.join(output_directory, 'run')
-    try:
-        os.makedirs(target_directory)
-    except FileExistsError:
-        pass
+    shutil.rmtree(target_directory)
 
     if archive:
-        with tarfile.open(os.path.join(location, archive)) as tar:
-            for name in tar.getnames():
-                if not os.path.abspath(os.path.join(target_directory, name)).startswith(target_directory):
-                    logging.error("This archive contains unsafe filenames: %s %s" % (os.path.abspath(os.path.join(target_directory, name)), target_directory))
-                    return
+        try:
+            os.makedirs(target_directory)
 
-            tar.extractall(path=target_directory)
+            with tarfile.open(os.path.join(location, archive)) as tar:
+                for name in tar.getnames():
+                    if not os.path.abspath(os.path.join(target_directory, name)).startswith(target_directory):
+                        logging.error("This archive contains unsafe filenames: %s %s" % (os.path.abspath(os.path.join(target_directory, name)), target_directory))
+                        return
+
+                tar.extractall(path=target_directory)
+        except IsADirectoryError:
+            try:
+                os.makedirs(os.path.dirname(target_directory))
+            except FileExistsError:
+                pass
+
+            shutil.copytree(archive, target_directory)
 
         location = target_directory
 
