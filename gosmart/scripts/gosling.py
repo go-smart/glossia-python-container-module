@@ -79,7 +79,11 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
 @asyncio.coroutine
 def execute(location, loop, target, interpreter, archive, exit, passthrough=False):
     target_directory = os.path.join(output_directory, 'run')
-    shutil.rmtree(target_directory)
+
+    try:
+        shutil.rmtree(target_directory)
+    except FileNotFoundError:
+        pass
 
     if archive:
         try:
