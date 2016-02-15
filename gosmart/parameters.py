@@ -78,9 +78,23 @@ class GoSmartParameterLoader:
         self.NP = {k: ParameterDict(v) for k, v in self._needle_parameter_dicts.items()}
 
 
-loader = GoSmartParameterLoader('/shared/input')
-R = loader.get_regions()
-P, NP = loader.get_parameters()
+R = None
+P = None
+NP = None
+update = None
+update_available = None
 
-update = gosmart.status.StatusUpdater()
-update_available = update.connect()
+
+def load():
+    global R, P, NP, updatee, update_available
+
+    loader = GoSmartParameterLoader('/shared/input')
+    loader.initiate()
+
+    R = loader.get_regions()
+    P, NP = loader.get_parameters()
+
+    update = gosmart.status.StatusUpdater()
+    update_available = update.connect()
+
+load()
