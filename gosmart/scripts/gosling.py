@@ -87,9 +87,9 @@ def execute(location, loop, target, interpreter, archive, exit, passthrough=Fals
 
     if archive:
         try:
-            os.makedirs(target_directory)
-
             with tarfile.open(os.path.join(location, archive)) as tar:
+                os.makedirs(target_directory)
+
                 for name in tar.getnames():
                     if not os.path.abspath(os.path.join(target_directory, name)).startswith(target_directory):
                         logging.error("This archive contains unsafe filenames: %s %s" % (os.path.abspath(os.path.join(target_directory, name)), target_directory))
