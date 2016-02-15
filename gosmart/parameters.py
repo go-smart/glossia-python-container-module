@@ -83,16 +83,19 @@ P = None
 NP = None
 update = None
 update_available = None
+region_dict = None
 
 
 def load():
-    global R, P, NP, updatee, update_available
+    global R, P, NP, updatee, update_available, region_dict
 
     loader = GoSmartParameterLoader('/shared/input')
     loader.initiate()
 
     R = loader.get_regions()
     P, NP = loader.get_parameters()
+
+    region_dict = loader.get_region_dict()
 
     update = gosmart.status.StatusUpdater()
     update_available = update.connect()
