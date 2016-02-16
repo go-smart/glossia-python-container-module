@@ -92,7 +92,7 @@ region_dict = None
 
 
 def load():
-    global R, P, NP, updatee, update_available, region_dict
+    global R, P, NP, update, update_available, region_dict
 
     loader = GoSmartParameterLoader(gosmart._prefix)
     loader.initiate()
