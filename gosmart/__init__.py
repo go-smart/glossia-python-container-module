@@ -2,14 +2,18 @@ import yaml
 
 _parameters = None
 _parameter_info = None
+_prefix = 'input'
 
 
-def setup(parameters):
-    global _parameters, _parameter_info
+def setup(parameters, prefix=None):
+    global _parameters, _parameter_info, _prefix
 
     if parameters is False:
         _parameters = False
         return
+
+    if prefix is not None:
+        _prefix = prefix
 
     if isinstance(parameters, basestring):
         try:

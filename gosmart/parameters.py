@@ -29,6 +29,9 @@ class GoSmartParameterLoader:
     def __init__(self, prefix):
         self._prefix = prefix
         self.initiated = False
+        self._parameter_dict = None
+        self._needle_parameter_dicts = {}
+        self._region_dict = {}
 
     def get_parameters(self):
         if self.initiated is False:
@@ -56,8 +59,8 @@ class GoSmartParameterLoader:
             with open(os.path.join(self._prefix, 'needle_parameters.yml'), 'r') as f:
                 self._needle_parameter_dicts = dict({v['index']: v['parameters'] for v in yaml.safe_load_all(f)})
 
-        with open(os.path.join(self._prefix, 'regions.yml'), 'r') as f:
-            self._region_dict = yaml.safe_load(f)
+            with open(os.path.join(self._prefix, 'regions.yml'), 'r') as f:
+                self._region_dict = yaml.safe_load(f)
 
     def initiate(self):
         self._load_parameters()
@@ -91,7 +94,7 @@ region_dict = None
 def load():
     global R, P, NP, updatee, update_available, region_dict
 
-    loader = GoSmartParameterLoader('input')
+    loader = GoSmartParameterLoader(gosmart._prefix)
     loader.initiate()
 
     R = loader.get_regions()
