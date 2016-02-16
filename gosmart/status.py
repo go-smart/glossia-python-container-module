@@ -27,25 +27,32 @@ class StatusUpdater:
         if update_socket_location is None:
             if 'GSSA_STATUS_SOCKET' in os.environ:
                 update_socket_location = os.environ['GSSA_STATUS_SOCKET']
-            else:
+            elif os.path.exists('/shared/update.sock'):
                 update_socket_location = '/shared/update.sock'
 
+        self._update_socket = None
         self._update_socket_location = update_socket_location
 
     def connect(self):
-        self._update_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        if not os.path.exists(self._update_socket_location):
+        if self._update_socket_location is None or not os.path.exists(self._update_socket_location):
             return False
+
+        self._update_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._update_socket.connect(self._update_socket_location)
 
     def status(self, message, percentage=None):
+        percentage_string = b''
+
         if percentage is not None:
             try:
                 percentage = float(percentage)
             except ValueError:
                 pass
             else:
-                self._update_socket.sendall(b'%lf|%s\n' % (percentage, message))
-                return
+                percentage_string = b'%lf|' % percentage
 
-        self._update_socket.sendall(b'%s\n' % message)
+        message = b'%s%s' % (percentage_string, message)
+        if self._update_socket is None:
+            print(message)
+        else:
+            self._update_socket.sendall(message)
