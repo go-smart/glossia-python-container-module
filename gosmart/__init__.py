@@ -3,10 +3,13 @@ import yaml
 _parameters = None
 _parameter_info = None
 _prefix = 'input'
+_check_declared = False
 
 
-def setup(parameters, prefix=None):
-    global _parameters, _parameter_info, _prefix
+def setup(parameters, prefix=None, check_declared=False):
+    global _parameters, _parameter_info, _prefix, _check_declared
+
+    _check_declared = check_declared
 
     if parameters is False:
         _parameters = False

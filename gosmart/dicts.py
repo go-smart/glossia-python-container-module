@@ -17,7 +17,7 @@ class ParameterDict(AttributeDict):
         return self.__getitem__(attr)
 
     def __getitem__(self, attr):
-        if attr not in declared_parameters:
+        if declared_parameters is not None and attr not in declared_parameters:
             raise KeyError(
                 "You have asked for an undeclared parameter, "
                 "[%s], "
@@ -52,4 +52,7 @@ if gosmart._parameters is None:
                 "a dict, with string keys."
             )
 
-declared_parameters = gosmart._parameters
+if gosmart._check_declared:
+    declared_parameters = gosmart._parameters
+else:
+    declared_parameters = None
