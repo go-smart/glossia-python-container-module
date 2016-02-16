@@ -39,13 +39,18 @@ class StatusUpdater:
         self._update_socket.connect(self._update_socket_location)
 
     def status(self, message, percentage=None):
+        percentage_string = b''
+
         if percentage is not None:
             try:
                 percentage = float(percentage)
             except ValueError:
                 pass
             else:
-                self._update_socket.sendall(b'%lf|%s\n' % (percentage, message))
-                return
+                percentage_string = b'%lf|' % percentage
 
-        self._update_socket.sendall(b'%s\n' % message)
+        message = b'%s%s' % (percentage_string, message)
+        if self._update_socket is None:
+            print(message)
+        else:
+            self._update_socket.sendall(message)
