@@ -43,8 +43,8 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
         AIOEventHandler.__init__(self, loop)
         PatternMatchingEventHandler.__init__(self, **kwargs)
 
-        if os.path.exists('/shared/input'):
-            asyncio.async(self.execute('/shared/input'))
+        if os.path.exists(input_directory):
+            asyncio.async(self.execute(input_directory))
 
     @asyncio.coroutine
     def execute(self, location):
@@ -107,6 +107,8 @@ def execute(location, loop, target, interpreter, archive, exit, passthrough=Fals
         location = target_directory
     else:
         os.makedirs(target_directory)
+
+    shutil.copytree(input_directory, os.path.join(target_directory, 'input'))
 
     if target:
         location = os.path.join(location, target)
@@ -205,7 +207,7 @@ def cli(target, interpreter, archive, override, static, delay, final, passthroug
     if override:
         logging.info("Instructed to override input-waiting")
         exit_cb = partial(exit, loop, None)
-        asyncio.async(execute('/shared/input', loop, target, interpreter, archive, exit_cb, passthrough))
+        asyncio.async(execute(input_directory, loop, target, interpreter, archive, exit_cb, passthrough))
     else:
         if delay:
             time.sleep(delay)
