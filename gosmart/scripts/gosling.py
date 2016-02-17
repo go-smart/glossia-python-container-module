@@ -221,7 +221,11 @@ def cli(target, interpreter, archive, override, static, delay, final, passthroug
     # This two-step approach ensures copying to Glossia is triggered by a move in shared/ and that
     # everything is on the same FS etc. before it happens
     if not static:
-        os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.tmp'))
+        try:
+            os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.tmp'))
+        except FileNotFoundError:
+            os.makedirs(os.path.join('/shared', 'output.tmp'))
+
         try:
             os.rename(log_directory, os.path.join('/shared', 'output.tmp', 'logs'))
         except FileExistsError:
