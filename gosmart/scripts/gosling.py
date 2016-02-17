@@ -220,6 +220,10 @@ def cli(target, interpreter, archive, override, static, delay, final, passthroug
     # everything is on the same FS etc. before it happens
     if not static:
         os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.tmp'))
+        try:
+            os.rename(log_directory, os.path.join('/shared', 'output.tmp', 'logs'))
+        except FileExistsError:
+            logging.warning('Not copying logs to output as directory already exists')
         os.rename(os.path.join('/shared', 'output.tmp'), os.path.join('/shared', 'output.final'))
 
     logging.info('Loop closed and exiting...')
