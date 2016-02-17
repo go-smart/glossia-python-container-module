@@ -105,6 +105,8 @@ def execute(location, loop, target, interpreter, archive, exit, passthrough=Fals
             shutil.copytree(archive, target_directory)
 
         location = target_directory
+    else:
+        os.makedirs(target_directory)
 
     if target:
         location = os.path.join(location, target)
