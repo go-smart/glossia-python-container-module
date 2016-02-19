@@ -26,12 +26,13 @@ log_directory = '/shared/output/logs'
 class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
     active = False
 
-    def __init__(self, exit, target, interpreter, archive, passthrough, loop=None, **kwargs):
+    def __init__(self, exit, target, interpreter, archive, passthrough, rmtree, loop=None, **kwargs):
         self._exit = exit
 
         self._archive = archive
         self._target = target
         self._passthrough = passthrough
+        self._rmtree = rmtree
         self._interpreter = interpreter
 
         patterns = kwargs['patterns'] if 'patterns' in kwargs else []
@@ -57,7 +58,8 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
             self._interpreter,
             self._archive,
             self._exit,
-            self._passthrough
+            self._passthrough,
+            rmtree=self._rmtree
         )
 
     @asyncio.coroutine
@@ -77,18 +79,19 @@ class DockerInnerHandler(AIOEventHandler, PatternMatchingEventHandler):
 
 
 @asyncio.coroutine
-def execute(location, loop, target, interpreter, archive, exit, passthrough=False):
+def execute(location, loop, target, interpreter, archive, exit, passthrough=False, rmtree=True):
     target_directory = os.path.join(output_directory, 'run')
 
-    try:
-        shutil.rmtree(target_directory)
-    except FileNotFoundError:
-        pass
+    if rmtree:
+        try:
+            shutil.rmtree(target_directory)
+        except FileNotFoundError:
+            pass
 
     if archive:
         try:
             with tarfile.open(os.path.join(location, archive)) as tar:
-                os.makedirs(target_directory)
+                os.makedirs(target_directory, exist_ok=True)
 
                 for name in tar.getnames():
                     if not os.path.abspath(os.path.join(target_directory, name)).startswith(target_directory):
@@ -97,16 +100,12 @@ def execute(location, loop, target, interpreter, archive, exit, passthrough=Fals
 
                 tar.extractall(path=target_directory)
         except IsADirectoryError:
-            try:
-                os.makedirs(os.path.dirname(target_directory))
-            except FileExistsError:
-                pass
-
+            os.makedirs(os.path.dirname(target_directory), exist_ok=True)
             shutil.copytree(archive, target_directory)
 
         location = target_directory
     else:
-        os.makedirs(target_directory)
+        os.makedirs(target_directory, exist_ok=True)
 
     shutil.copytree(input_directory, os.path.join(target_directory, 'input'))
 
@@ -172,10 +171,10 @@ def exit(loop, observer=None, future=None):
 
 
 @asyncio.coroutine
-def run(loop, target, interpreter, archive, passthrough):
+def run(loop, target, interpreter, archive, passthrough, rmtree):
     observer = Observer()
 
-    event_handler = DockerInnerHandler(partial(exit, loop, observer), target, interpreter, archive, passthrough, loop=loop)
+    event_handler = DockerInnerHandler(partial(exit, loop, observer), target, interpreter, archive, passthrough, rmtree=rmtree, loop=loop)
 
     observer.schedule(event_handler, '/shared')
     observer.start()
@@ -192,7 +191,8 @@ def run(loop, target, interpreter, archive, passthrough):
 @click.option('--delay', default=0, help='wait for N secs before starting watching')
 @click.option('--final', default='output', help='location of the final output directory to be sent to GSSA, rel. to /shared')
 @click.option('--passthrough', is_flag=True, help='pass through subprocess output, rather than silently logging')
-def cli(target, interpreter, archive, override, static, delay, final, passthrough):
+@click.option('--rm/--no-rm', default=True, help='remove any existing output run tree before running; some families require this always')
+def cli(target, interpreter, archive, override, static, delay, final, passthrough, rm):
     """Manage a single script run for docker-launch"""
 
     os.makedirs(log_directory, exist_ok=True)
@@ -207,11 +207,11 @@ def cli(target, interpreter, archive, override, static, delay, final, passthroug
     if override:
         logging.info("Instructed to override input-waiting")
         exit_cb = partial(exit, loop, None)
-        asyncio.async(execute(input_directory, loop, target, interpreter, archive, exit_cb, passthrough))
+        asyncio.async(execute(input_directory, loop, target, interpreter, archive, exit_cb, passthrough, rmtree=rm))
     else:
         if delay:
             time.sleep(delay)
-        asyncio.async(run(loop, target, interpreter, archive, passthrough))
+        asyncio.async(run(loop, target, interpreter, archive, passthrough, rmtree=rm))
 
     try:
         loop.run_forever()
