@@ -147,7 +147,7 @@ def exit(loop, observer=None, future=None):
 
     with open(exit_file, 'w') as f:
         if not future:
-            f.write("-9999\nNo future returned")
+            f.write("1\nNo future returned")
         elif future.result() != 0:
             try:
                 err_file = os.path.join(log_directory, 'job.err')
