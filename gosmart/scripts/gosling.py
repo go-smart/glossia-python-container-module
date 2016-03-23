@@ -149,12 +149,20 @@ def exit(loop, observer=None, future=None):
         if not future:
             f.write("1\nNo future returned")
         elif future.result() != 0:
+            target_directory = os.path.join(output_directory, 'run')
+            error_message_path = os.path.join(target_directory, 'error_message')
             try:
-                err_file = os.path.join(log_directory, 'job.err')
-                with open(err_file, 'r') as err:
-                    snippet = '\n'.join(err.readlines()[-10:])
+                with open(error_message_path, 'r') as f:
+                    snippet = f.read().strip()
+                    snippet.encode('ascii', 'xmlcharrefreplace')
+                    snippet.encode('utf-8')
             except:
-                snippet = "Could not retrieve STDERR"
+                try:
+                    err_file = os.path.join(log_directory, 'job.err')
+                    with open(err_file, 'r') as err:
+                        snippet = '\n'.join(err.readlines()[-10:])
+                except:
+                    snippet = "Could not retrieve STDERR"
             f.write('%d\nError in script: %s' % (future.result(), snippet))
         else:
             f.write('0\nOK')
