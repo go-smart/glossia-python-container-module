@@ -152,8 +152,8 @@ def exit(loop, observer=None, future=None):
             target_directory = os.path.join(output_directory, 'run')
             error_message_path = os.path.join(target_directory, 'error_message')
             try:
-                with open(error_message_path, 'r') as f:
-                    snippet = f.read().strip()
+                with open(error_message_path, 'r') as g:
+                    snippet = g.read().strip()
                     snippet.encode('ascii', 'xmlcharrefreplace')
                     snippet.encode('utf-8')
             except:
