@@ -8,7 +8,7 @@
     
     <title>gosmart.parameters &mdash; Glossia Python Container Module 0.2 documentation</title>
     
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -25,19 +25,23 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="Glossia Python Container Module 0.2 documentation" href="../../index.html" />
-    <link rel="up" title="gosmart" href="../gosmart.html" />
-   
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="up" title="gosmart" href="../gosmart.html" /> 
   </head>
-  <body role="document">  
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="../../index.html">
+          <span>Glossia Python Container Module 0.2 documentation</span></a></h1>
+        <h2 class="heading"><span>gosmart.parameters</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <h1>Source code for gosmart.parameters</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
@@ -67,6 +71,8 @@
 
 
 <div class="viewcode-block" id="GoSmartParameterLoader"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.parameters.GoSmartParameterLoader">[docs]</a><span class="k">class</span> <span class="nc">GoSmartParameterLoader</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Turn stored parameters (inc. regions) into usable Python objects.&quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefix</span> <span class="o">=</span> <span class="n">prefix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">initiated</span> <span class="o">=</span> <span class="bp">False</span>
@@ -75,18 +81,22 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_region_dict</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="GoSmartParameterLoader.get_parameters"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.parameters.GoSmartParameterLoader.get_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return both global parameters and a dictionary of needle parameter</span>
+<span class="sd">        dictionaries (tuple).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initiated</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Initiate first&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">NP</span></div>
 
 <div class="viewcode-block" id="GoSmartParameterLoader.get_regions"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.parameters.GoSmartParameterLoader.get_regions">[docs]</a>    <span class="k">def</span> <span class="nf">get_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the global region class.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initiated</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Initiate first&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span></div>
 
 <div class="viewcode-block" id="GoSmartParameterLoader.get_region_dict"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.parameters.GoSmartParameterLoader.get_region_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_region_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the region dict (mostly internal).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initiated</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Initiate first&quot;</span><span class="p">)</span>
 
@@ -104,6 +114,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_region_dict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GoSmartParameterLoader.initiate"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.parameters.GoSmartParameterLoader.initiate">[docs]</a>    <span class="k">def</span> <span class="nf">initiate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load and process regions and parameters.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_parameters</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initiate_region_dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initiate_parameter_dict</span><span class="p">()</span>
@@ -133,6 +144,9 @@
 
 
 <div class="viewcode-block" id="load"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.parameters.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Set up the objects that end-users may wish to use from this</span>
+<span class="sd">    module directly - especially, R, P and NP.&quot;&quot;&quot;</span>
+
     <span class="k">global</span> <span class="n">R</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">NP</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span> <span class="n">update_available</span><span class="p">,</span> <span class="n">region_dict</span>
 
     <span class="n">loader</span> <span class="o">=</span> <span class="n">GoSmartParameterLoader</span><span class="p">(</span><span class="n">gosmart</span><span class="o">.</span><span class="n">_prefix</span><span class="p">)</span>
@@ -153,49 +167,18 @@
     <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Could not load the parameters&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
 </pre></div>
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  <li><a href="../gosmart.html">gosmart</a><ul>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
+
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2016, Phil Weir.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
-      
-    </div>
 
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Phil Weir.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
+    </div>
   </body>
 </html>

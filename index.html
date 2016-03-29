@@ -8,7 +8,7 @@
     
     <title>Welcome to Glossia Python Container Module’s documentation! &mdash; Glossia Python Container Module 0.2 documentation</title>
     
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -25,19 +25,25 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="Glossia Python Container Module 0.2 documentation" href="#" />
-    <link rel="next" title="Documentation workflow" href="documentation.html" />
-   
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="next" title="Documentation workflow" href="documentation.html" /> 
   </head>
-  <body role="document">  
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="#">
+          <span>Glossia Python Container Module 0.2 documentation</span></a></h1>
+        <h2 class="heading"><span>Welcome to Glossia Python Container Module’s documentation!</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="#">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="documentation.html">Documentation workflow</a>&#160;&#160;»
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <div class="section" id="welcome-to-glossia-python-container-module-s-documentation">
 <h1>Welcome to Glossia Python Container Module&#8217;s documentation!<a class="headerlink" href="#welcome-to-glossia-python-container-module-s-documentation" title="Permalink to this headline">¶</a></h1>
 <p>Contents:</p>
@@ -50,6 +56,29 @@
 </li>
 </ul>
 </div>
+<p>This module allows easy setup of a new Glossia simulation container image, wrapping a
+previously unsupported piece of software. While Glossia is much more flexible, this
+is an opinionated approach to accelerate the process for the end-user.</p>
+<p>In particular, this module assumes it is running in a Glossia container and performs
+several (non-destructive) checks <cite>at import time</cite>. In other circumstances,
+this would not be desirable but for less familiar Python users, this reduces the
+burden on end-user scripts, ensuring submodules imported immediately have transparent access
+to parameter information.</p>
+<p>Within the container script, one may simply enter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gosmart.parameters</span> <span class="kn">import</span> <span class="n">P</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">CONSTANT_MAGIC_NUMBER</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal"><span class="pre">CONSTANT_MAGIC_NUMBER</span></code> is a (float) parameter defined in for the numerical model.</p>
+<p>Region information may be accessed by:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gosmart.parameters</span> <span class="kn">import</span> <span class="n">R</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">idx</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;organ&quot;</span><span class="p">)]</span>
+<span class="go">[1, 2, 3]</span>
+</pre></div>
+</div>
+<p>where these indices are mesh volumetric subdomain labels for any regions within the <cite>organs</cite>
+group (if the auto-pre-meshing container base is used).</p>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -61,62 +90,20 @@
 </div>
 
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Welcome to Glossia Python Container Module&#8217;s documentation!</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="documentation.html" title="next chapter">Documentation workflow</a></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="#">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="documentation.html">Documentation workflow</a>&#160;&#160;»
+        </p>
+
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2016, Phil Weir.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
-      
-      |
-      <a href="_sources/index.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Phil Weir.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
+    </div>
   </body>
 </html>

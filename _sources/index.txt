@@ -14,7 +14,37 @@ Contents:
    documentation
    api/index
 
+This module allows easy setup of a new Glossia simulation container image, wrapping a
+previously unsupported piece of software. While Glossia is much more flexible, this
+is an opinionated approach to accelerate the process for the end-user.
 
+In particular, this module assumes it is running in a Glossia container and performs
+several (non-destructive) checks `at import time`. In other circumstances,
+this would not be desirable but for less familiar Python users, this reduces the
+burden on end-user scripts, ensuring submodules imported immediately have transparent access
+to parameter information.
+
+Within the container script, one may simply enter:
+
+::
+
+    >>> from gosmart.parameters import P
+    >>> P.CONSTANT_MAGIC_NUMBER
+    3.0
+
+
+where ``CONSTANT_MAGIC_NUMBER`` is a (float) parameter defined in for the numerical model.
+
+Region information may be accessed by:
+
+::
+
+    >>> from gosmart.parameters import R
+    >>> [r.idx for r in R.group("organ")]
+    [1, 2, 3]
+
+where these indices are mesh volumetric subdomain labels for any regions within the `organs`
+group (if the auto-pre-meshing container base is used).
 
 Indices and tables
 ==================

@@ -8,7 +8,7 @@
     
     <title>gosmart.region &mdash; Glossia Python Container Module 0.2 documentation</title>
     
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -25,60 +25,83 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="Glossia Python Container Module 0.2 documentation" href="../../index.html" />
-    <link rel="up" title="gosmart" href="../gosmart.html" />
-   
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="up" title="gosmart" href="../gosmart.html" /> 
   </head>
-  <body role="document">  
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="../../index.html">
+          <span>Glossia Python Container Module 0.2 documentation</span></a></h1>
+        <h2 class="heading"><span>gosmart.region</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <h1>Source code for gosmart.region</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 
 
 <div class="viewcode-block" id="Region"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.region.Region">[docs]</a><span class="k">class</span> <span class="nc">Region</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rendering of CDM conceptual region.</span>
+
+<span class="sd">    This contains information about a CDM database-defined region.</span>
+<span class="sd">    If the `gosmart/goosefoot-mesher-base` container has been used,</span>
+<span class="sd">    volumetric meshing will be automatically performed and objects</span>
+<span class="sd">    with this class will know their mesh labels within the generated</span>
+<span class="sd">    `MSH &lt;http://gmsh.info&gt;`_ file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">__regions_by_group</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">__regions_by_meshed_as</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="Region.meshed_as"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.region.Region.meshed_as">[docs]</a>    <span class="k">def</span> <span class="nf">meshed_as</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">meshed_as</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all regions that are meshed as, say, &#39;surface&#39; or &#39;zone&#39;,</span>
+<span class="sd">        that is, are (poss. internal) boundary or volumetric subdomains.&quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="n">meshed_as</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_meshed_as</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_meshed_as</span><span class="p">[</span><span class="n">cls</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">None</span></div>
 
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="Region.zone"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.region.Region.zone">[docs]</a>    <span class="k">def</span> <span class="nf">zone</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all volumetric subdomains.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_meshed_as</span><span class="p">[</span><span class="s2">&quot;zone&quot;</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span></div>
 
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="Region.surface"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.region.Region.surface">[docs]</a>    <span class="k">def</span> <span class="nf">surface</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all (internal and external) boundary subdomains.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_meshed_as</span><span class="p">[</span><span class="s2">&quot;surface&quot;</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span></div>
 
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="Region.group"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.region.Region.group">[docs]</a>    <span class="k">def</span> <span class="nf">group</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">group</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all regions within a (CDM-defined) named group (e.g. &#39;organs&#39;, &#39;tumours&#39;).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_group</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_group</span><span class="p">[</span><span class="n">group</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">None</span></div>
 
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="Region.add_region_to_group"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.region.Region.add_region_to_group">[docs]</a>    <span class="k">def</span> <span class="nf">add_region_to_group</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;(Mostly internal) add a region to a given group name.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_group</span><span class="p">:</span>
             <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_group</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_group</span><span class="p">[</span><span class="n">group</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region</span><span class="p">)</span></div>
 
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="Region.add_region_to_meshed_as"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.region.Region.add_region_to_meshed_as">[docs]</a>    <span class="k">def</span> <span class="nf">add_region_to_meshed_as</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">meshed_as</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;(Mostly internal) globally register a region as surface/zone.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">meshed_as</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_meshed_as</span><span class="p">:</span>
             <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_meshed_as</span><span class="p">[</span><span class="n">meshed_as</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">cls</span><span class="o">.</span><span class="n">__regions_by_meshed_as</span><span class="p">[</span><span class="n">meshed_as</span><span class="p">][</span><span class="n">region</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">region</span></div>
 
 <div class="viewcode-block" id="Region.am"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.region.Region.am">[docs]</a>    <span class="k">def</span> <span class="nf">am</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check whether this region is in named CDM group.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span></div>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_dict</span><span class="p">):</span>
@@ -103,49 +126,18 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">meshed_as</span> <span class="o">=</span> <span class="bp">None</span></div>
 </pre></div>
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  <li><a href="../gosmart.html">gosmart</a><ul>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
+
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2016, Phil Weir.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
-      
-    </div>
 
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Phil Weir.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
+    </div>
   </body>
 </html>

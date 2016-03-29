@@ -8,7 +8,7 @@
     
     <title>gosmart.dicts &mdash; Glossia Python Container Module 0.2 documentation</title>
     
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -25,25 +25,38 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="Glossia Python Container Module 0.2 documentation" href="../../index.html" />
-    <link rel="up" title="gosmart" href="../gosmart.html" />
-   
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="up" title="gosmart" href="../gosmart.html" /> 
   </head>
-  <body role="document">  
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="../../index.html">
+          <span>Glossia Python Container Module 0.2 documentation</span></a></h1>
+        <h2 class="heading"><span>gosmart.dicts</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <h1>Source code for gosmart.dicts</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">gosmart</span>
 <span class="kn">from</span> <span class="nn">gosmart.utils</span> <span class="kn">import</span> <span class="n">convert_parameter</span>
 
 
 <div class="viewcode-block" id="AttributeDict"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.dicts.AttributeDict">[docs]</a><span class="k">class</span> <span class="nc">AttributeDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Basic extension to dict allowing dot-access.</span>
+
+<span class="sd">    Very helpful in keeping `Jinja2 &lt;http://jinja.pocoo.org/&gt;`_ files succinct.</span>
+
+<span class="sd">    &gt;&gt;&gt; A = AttributeDict({&quot;name&quot;: &quot;value&quot;})</span>
+<span class="sd">    &gt;&gt;&gt; A.name</span>
+<span class="sd">    value</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span></div>
 
@@ -51,6 +64,53 @@
 <span class="c1"># Note that this class is not ready to replace dict entirely (that</span>
 <span class="c1"># requires more method overriding than here)</span>
 <div class="viewcode-block" id="ParameterDict"><a class="viewcode-back" href="../../api/gosmart.html#gosmart.dicts.ParameterDict">[docs]</a><span class="k">class</span> <span class="nc">ParameterDict</span><span class="p">(</span><span class="n">AttributeDict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Super-dict for Parameters.</span>
+
+<span class="sd">    Extends :py:class:`~gosmart.dicts.AttributeDict` with additional</span>
+<span class="sd">    Parameter-specific functionality. Allows things like (where</span>
+<span class="sd">    `CONSTANT_MAGIC_NUMBER` is a float of value 3.0):</span>
+
+<span class="sd">        &gt;&gt;&gt; import gosmart</span>
+<span class="sd">        &gt;&gt;&gt; gosmart.setup([&quot;CONSTANT_MAGIC_NUMBER&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; from gosmart.dicts import ParameterDict</span>
+<span class="sd">        &gt;&gt;&gt; paramdict = ParameterDict({</span>
+<span class="sd">                &quot;CONSTANT_MAGIC_NUMBER&quot;: (&quot;float&quot;, &quot;3&quot;)</span>
+<span class="sd">                &quot;CONSTANT_ELDRITCH_FIGURE&quot;: (&quot;int&quot;, &quot;3&quot;)</span>
+<span class="sd">            })</span>
+<span class="sd">        &gt;&gt;&gt; paramdict[&quot;CONSTANT_MAGIC_NUMBER&quot;]</span>
+<span class="sd">        3.0</span>
+<span class="sd">        &gt;&gt;&gt; paramdict.CONSTANT_MAGIC_NUMBER + 1.0</span>
+<span class="sd">        4.0</span>
+<span class="sd">        &gt;&gt;&gt; paramdict[&quot;CONSTANT_ELDRITCH_FIGURE&quot;] + 1.0</span>
+<span class="sd">        KeyError: You have asked for an undeclared parameter, [CONSTANT_ELDRITCH_FIGURE], please check your gosmart.setup(...) call.</span>
+
+
+<span class="sd">    The class itself is primarily useful internally, but the most</span>
+<span class="sd">    useful user-facing aspect is that you can check your declared parameters</span>
+<span class="sd">    match the parameters you use in your code with the ``check_declared``</span>
+<span class="sd">    option to :py:func:`gosmart.setup`. This should be a separate YAML</span>
+<span class="sd">    file containing a list of expected parameters and will be used</span>
+<span class="sd">    by the Go-Smart Clinical Domain Model to assign constraints to your</span>
+<span class="sd">    numerical models (in the example, we pass a dict instead). If you</span>
+<span class="sd">    use, in any parameter dictionary, a parameter not included in the</span>
+<span class="sd">    master list an error will be thrown.</span>
+
+<span class="sd">    At present, not all functionality of Goosefoot&#39;s ParameterDict is</span>
+<span class="sd">    available, but when this is incorporated, it may be possible to</span>
+<span class="sd">    access the original string and typestring from the returned value.</span>
+<span class="sd">    However, this would require subclassing common types. If end-users</span>
+<span class="sd">    consistently duck-type (i.e. no isinstances) this may be of benefit</span>
+<span class="sd">    to them, but only as an optional parameter to :py:func:`gosmart.setup`.</span>
+
+<span class="sd">    In the future, this YAML file may be replaced or supplemented</span>
+<span class="sd">    by AST inspection within the Go-Smart CDM.</span>
+
+<span class="sd">    Note that not all dictionary functionality is yet overridden.</span>
+
+<span class="sd">    .. inheritance-diagram:: gosmart.dicts.ParameterDict</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -99,49 +159,18 @@
     <span class="n">declared_parameters</span> <span class="o">=</span> <span class="bp">None</span>
 </pre></div>
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  <li><a href="../gosmart.html">gosmart</a><ul>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
+
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2016, Phil Weir.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
-      
-    </div>
 
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Phil Weir.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
+    </div>
   </body>
 </html>

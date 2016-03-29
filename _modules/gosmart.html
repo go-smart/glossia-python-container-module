@@ -8,7 +8,7 @@
     
     <title>gosmart &mdash; Glossia Python Container Module 0.2 documentation</title>
     
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -25,19 +25,23 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="Glossia Python Container Module 0.2 documentation" href="../index.html" />
-    <link rel="up" title="Module code" href="index.html" />
-   
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="up" title="Module code" href="index.html" /> 
   </head>
-  <body role="document">  
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>Glossia Python Container Module 0.2 documentation</span></a></h1>
+        <h2 class="heading"><span>gosmart</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content">
+        
+        
   <h1>Source code for gosmart</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">yaml</span>
 
@@ -47,7 +51,42 @@
 <span class="n">_check_declared</span> <span class="o">=</span> <span class="bp">False</span>
 
 
+<span class="k">try</span><span class="p">:</span>
+    <span class="nb">basestring</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">basestring</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="setup"><a class="viewcode-back" href="../api/gosmart.html#gosmart.setup">[docs]</a><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">check_declared</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Configure the Glossia Python Container Module (gosmart).</span>
+
+<span class="sd">    Strictly, this is optional, as it will be called when the</span>
+<span class="sd">    end-user wishes to use a parameter, but if the Glossia</span>
+<span class="sd">    container parameter definition files are not found it will</span>
+<span class="sd">    raise RuntimeErrors.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        parameters (dict|str|False|None): this may either be a</span>
+<span class="sd">            parameter dictionary or a string filename naming</span>
+<span class="sd">            a parameter YAML file. If no parameters are to be</span>
+<span class="sd">            loaded, False should be passed (this disables</span>
+<span class="sd">            searching in gosmart.parameters).</span>
+<span class="sd">            The None option is primarily for testing, to indicate</span>
+<span class="sd">            parameters should not be loaded, but the processes</span>
+<span class="sd">            should otherwise continue as normal.</span>
+<span class="sd">        prefix (str): location of parameter files relative to</span>
+<span class="sd">            the simulation working directory. Defaults to</span>
+<span class="sd">            ``gosmart._prefix``.</span>
+<span class="sd">        check_declared (bool): raise a warning if parameters are</span>
+<span class="sd">            subsequently requested that haven&#39;t been declared in</span>
+<span class="sd">            ``parameters``, even if they exist in the database-sourced</span>
+<span class="sd">            parameter files.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RuntimeError: if parameters are requested but not found</span>
+<span class="sd">            in the filesystem.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">global</span> <span class="n">_parameters</span><span class="p">,</span> <span class="n">_parameter_info</span><span class="p">,</span> <span class="n">_prefix</span><span class="p">,</span> <span class="n">_check_declared</span>
 
     <span class="n">_check_declared</span> <span class="o">=</span> <span class="n">check_declared</span>
@@ -85,47 +124,18 @@
                 <span class="p">)</span></div>
 </pre></div>
 
-          </div>
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-  <li><a href="index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2016, Phil Weir.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
-      
-    </div>
 
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Phil Weir.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
+    </div>
   </body>
 </html>
