@@ -44,7 +44,7 @@ if gosmart._parameters is None:
         except Exception as f:
             print(e)
             print(f)
-            raise RuntimeError(
+            print(
                 "To load Go-Smart parameters from a non-default location"
                 ", you should first run "
                 "gosmart.setup(parameters), where parameters is a "

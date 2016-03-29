@@ -106,4 +106,7 @@ def load():
     update_available = update.connect()
 
 
-load()
+try:
+    load()
+except FileNotFoundError as e:
+    print("Could not load the parameters", e)
