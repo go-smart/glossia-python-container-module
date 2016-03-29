@@ -1,0 +1,334 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gosmart.scripts.gosling &mdash; Glossia Python Container Module 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Glossia Python Container Module 0.2 documentation" href="../../../index.html" />
+    <link rel="up" title="gosmart" href="../../gosmart.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gosmart.scripts.gosling</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">click</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">tarfile</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">hachiko.hachiko</span> <span class="kn">import</span> <span class="n">AIOEventHandler</span>
+<span class="kn">from</span> <span class="nn">watchdog.observers</span> <span class="kn">import</span> <span class="n">Observer</span>
+<span class="kn">from</span> <span class="nn">watchdog.events</span> <span class="kn">import</span> <span class="n">PatternMatchingEventHandler</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+    <span class="n">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(name)s</span><span class="s2"> - </span><span class="si">%(levelname)s</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
+
+<span class="n">input_directory</span> <span class="o">=</span> <span class="s1">&#39;/shared/input&#39;</span>
+<span class="n">output_directory</span> <span class="o">=</span> <span class="s1">&#39;/shared/output&#39;</span>
+<span class="n">log_directory</span> <span class="o">=</span> <span class="s1">&#39;/shared/output/logs&#39;</span>
+
+
+<div class="viewcode-block" id="DockerInnerHandler"><a class="viewcode-back" href="../../../api/gosmart.scripts.html#gosmart.scripts.gosling.DockerInnerHandler">[docs]</a><span class="k">class</span> <span class="nc">DockerInnerHandler</span><span class="p">(</span><span class="n">AIOEventHandler</span><span class="p">,</span> <span class="n">PatternMatchingEventHandler</span><span class="p">):</span>
+    <span class="n">active</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">exit</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">interpreter</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">,</span> <span class="n">rmtree</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exit</span> <span class="o">=</span> <span class="nb">exit</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_archive</span> <span class="o">=</span> <span class="n">archive</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_passthrough</span> <span class="o">=</span> <span class="n">passthrough</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rmtree</span> <span class="o">=</span> <span class="n">rmtree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interpreter</span> <span class="o">=</span> <span class="n">interpreter</span>
+
+        <span class="n">patterns</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;patterns&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;patterns&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;patterns&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">patterns</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Patterns: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;patterns&#39;</span><span class="p">]))</span>
+
+        <span class="n">AIOEventHandler</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="p">)</span>
+        <span class="n">PatternMatchingEventHandler</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">input_directory</span><span class="p">):</span>
+            <span class="n">asyncio</span><span class="o">.</span><span class="n">async</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">input_directory</span><span class="p">))</span>
+
+    <span class="nd">@asyncio.coroutine</span>
+<div class="viewcode-block" id="DockerInnerHandler.execute"><a class="viewcode-back" href="../../../api/gosmart.scripts.html#gosmart.scripts.gosling.DockerInnerHandler.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">yield from</span> <span class="n">execute</span><span class="p">(</span>
+            <span class="n">location</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interpreter</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_archive</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exit</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_passthrough</span><span class="p">,</span>
+            <span class="n">rmtree</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rmtree</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@asyncio.coroutine</span>
+<div class="viewcode-block" id="DockerInnerHandler.on_moved"><a class="viewcode-back" href="../../../api/gosmart.scripts.html#gosmart.scripts.gosling.DockerInnerHandler.on_moved">[docs]</a>    <span class="k">def</span> <span class="nf">on_moved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">dest_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;/input&#39;</span><span class="p">):</span>
+            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_exists</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">dest_path</span><span class="p">)</span></div>
+
+    <span class="nd">@asyncio.coroutine</span>
+<div class="viewcode-block" id="DockerInnerHandler.handle_exists"><a class="viewcode-back" href="../../../api/gosmart.scripts.html#gosmart.scripts.gosling.DockerInnerHandler.handle_exists">[docs]</a>    <span class="k">def</span> <span class="nf">handle_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Spotted new start script&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Already started a script&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">location</span><span class="p">)</span></div></div>
+
+
+<span class="nd">@asyncio.coroutine</span>
+<div class="viewcode-block" id="execute"><a class="viewcode-back" href="../../../api/gosmart.scripts.html#gosmart.scripts.gosling.execute">[docs]</a><span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">interpreter</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="nb">exit</span><span class="p">,</span> <span class="n">passthrough</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">rmtree</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="n">target_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rmtree</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">target_directory</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">archive</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">archive</span><span class="p">))</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getnames</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">target_directory</span><span class="p">):</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;This archive contains unsafe filenames: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="n">name</span><span class="p">)),</span> <span class="n">target_directory</span><span class="p">))</span>
+                        <span class="k">return</span>
+
+                <span class="n">tar</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">target_directory</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">IsADirectoryError</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target_directory</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">)</span>
+
+        <span class="n">location</span> <span class="o">=</span> <span class="n">target_directory</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">input_directory</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="s1">&#39;input&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">target</span><span class="p">:</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">location</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Missing a </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="n">log_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_directory</span><span class="p">,</span> <span class="s1">&#39;job.out&#39;</span><span class="p">)</span>
+    <span class="n">err_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_directory</span><span class="p">,</span> <span class="s1">&#39;job.err&#39;</span><span class="p">)</span>
+
+    <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="n">interpreter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">interpreter</span> <span class="k">else</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[</span><span class="n">location</span><span class="p">]</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running user command: {command}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command</span><span class="p">)))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">passthrough</span><span class="p">:</span>
+            <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">),</span> <span class="nb">open</span><span class="p">(</span><span class="n">err_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+        <span class="n">process</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_subprocess_exec</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">command</span><span class="p">,</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">stdout</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">target_directory</span>
+        <span class="p">)</span>
+        <span class="n">process</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">process</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">async</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">wait</span><span class="p">())</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="nb">exit</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Exception raised launching user script: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                      <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">call_soon_threadsafe</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="nb">exit</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="exit"><a class="viewcode-back" href="../../../api/gosmart.scripts.html#gosmart.scripts.gosling.exit">[docs]</a><span class="k">def</span> <span class="nf">exit</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">observer</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">future</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Exiting post-user-command&quot;</span><span class="p">)</span>
+    <span class="n">exit_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_directory</span><span class="p">,</span> <span class="s1">&#39;exit_status&#39;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">exit_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">future</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;1</span><span class="se">\n</span><span class="s2">No future returned&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">target_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">)</span>
+            <span class="n">error_message_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="s1">&#39;error_message&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">error_message_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">g</span><span class="p">:</span>
+                    <span class="n">snippet</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="n">snippet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">,</span> <span class="s1">&#39;xmlcharrefreplace&#39;</span><span class="p">)</span>
+                    <span class="n">snippet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">err_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_directory</span><span class="p">,</span> <span class="s1">&#39;job.err&#39;</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">err_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                        <span class="n">snippet</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">readlines</span><span class="p">()[</span><span class="o">-</span><span class="mi">10</span><span class="p">:])</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">snippet</span> <span class="o">=</span> <span class="s2">&quot;Could not retrieve STDERR&quot;</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">Error in script: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">(),</span> <span class="n">snippet</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;0</span><span class="se">\n</span><span class="s1">OK&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">observer</span><span class="p">:</span>
+        <span class="n">observer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+    <span class="n">loop</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stopped event loop&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">observer</span><span class="p">:</span>
+        <span class="n">observer</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Observer exited&quot;</span><span class="p">)</span></div>
+
+
+<span class="nd">@asyncio.coroutine</span>
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../../api/gosmart.scripts.html#gosmart.scripts.gosling.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">interpreter</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">,</span> <span class="n">rmtree</span><span class="p">):</span>
+    <span class="n">observer</span> <span class="o">=</span> <span class="n">Observer</span><span class="p">()</span>
+
+    <span class="n">event_handler</span> <span class="o">=</span> <span class="n">DockerInnerHandler</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="nb">exit</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">observer</span><span class="p">),</span> <span class="n">target</span><span class="p">,</span> <span class="n">interpreter</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">,</span> <span class="n">rmtree</span><span class="o">=</span><span class="n">rmtree</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">)</span>
+
+    <span class="n">observer</span><span class="o">.</span><span class="n">schedule</span><span class="p">(</span><span class="n">event_handler</span><span class="p">,</span> <span class="s1">&#39;/shared&#39;</span><span class="p">)</span>
+    <span class="n">observer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Observation thread started&#39;</span><span class="p">)</span></div>
+
+
+<span class="nd">@click.command</span><span class="p">()</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--target&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;script or executable to run (rel. to input folder/start-archive if applicable)&#39;</span><span class="p">)</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--interpreter&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;interpreter to use for running target&#39;</span><span class="p">)</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--archive&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;watch for start-archive instead of single file&#39;</span><span class="p">)</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--override&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;go straight to execution&#39;</span><span class="p">)</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--static&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;do not think about third-party observation or moving output&#39;</span><span class="p">)</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--delay&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;wait for N secs before starting watching&#39;</span><span class="p">)</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--final&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;location of the final output directory to be sent to GSSA, rel. to /shared&#39;</span><span class="p">)</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--passthrough&#39;</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;pass through subprocess output, rather than silently logging&#39;</span><span class="p">)</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s1">&#39;--rm/--no-rm&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;remove any existing output run tree before running; some families require this always&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">cli</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">interpreter</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">override</span><span class="p">,</span> <span class="n">static</span><span class="p">,</span> <span class="n">delay</span><span class="p">,</span> <span class="n">final</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">,</span> <span class="n">rm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Manage a single script run for docker-launch&quot;&quot;&quot;</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">logfile_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_directory</span><span class="p">,</span> <span class="s2">&quot;docker_inner.log&quot;</span><span class="p">))</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logfile_handler</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting up...&quot;</span><span class="p">)</span>
+
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">override</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Instructed to override input-waiting&quot;</span><span class="p">)</span>
+        <span class="n">exit_cb</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="nb">exit</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">async</span><span class="p">(</span><span class="n">execute</span><span class="p">(</span><span class="n">input_directory</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">interpreter</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">exit_cb</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">,</span> <span class="n">rmtree</span><span class="o">=</span><span class="n">rm</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">delay</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">async</span><span class="p">(</span><span class="n">run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">interpreter</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">,</span> <span class="n">rmtree</span><span class="o">=</span><span class="n">rm</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_forever</span><span class="p">()</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Moving output to final location&#39;</span><span class="p">)</span>
+
+    <span class="c1"># This two-step approach ensures copying to Glossia is triggered by a move in shared/ and that</span>
+    <span class="c1"># everything is on the same FS etc. before it happens</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">static</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/shared&#39;</span><span class="p">,</span> <span class="n">final</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/shared&#39;</span><span class="p">,</span> <span class="s1">&#39;output.tmp&#39;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">FileNotFoundError</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/shared&#39;</span><span class="p">,</span> <span class="s1">&#39;output.tmp&#39;</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">log_directory</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/shared&#39;</span><span class="p">,</span> <span class="s1">&#39;output.tmp&#39;</span><span class="p">,</span> <span class="s1">&#39;logs&#39;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">FileExistsError</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not copying logs to output as directory already exists&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/shared&#39;</span><span class="p">,</span> <span class="s1">&#39;output.tmp&#39;</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/shared&#39;</span><span class="p">,</span> <span class="s1">&#39;output.final&#39;</span><span class="p">))</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Loop closed and exiting...&#39;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../gosmart.html">gosmart</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Phil Weir.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
