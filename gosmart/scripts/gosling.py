@@ -242,6 +242,7 @@ def cli(target, interpreter, archive, override, static, delay, final, passthroug
                 os.rename(log_directory, os.path.join(tmp_output, 'logs'))
             except FileExistsError:
                 logging.warning('Not copying logs to output as directory already exists')
-            os.rename(os.path.join('/shared', 'output.tmp'), os.path.join('/shared', 'output.final'))
+
+        os.rename(os.path.join('/shared', 'output.tmp'), os.path.join('/shared', 'output.final'))
 
     logging.info('Loop closed and exiting...')
