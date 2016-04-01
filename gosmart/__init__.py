@@ -6,7 +6,42 @@ _prefix = 'input'
 _check_declared = False
 
 
+try:
+    basestring
+except:
+    basestring = (str, bytes)
+
+
 def setup(parameters, prefix=None, check_declared=False):
+    """Configure the Glossia Python Container Module (gosmart).
+
+    Strictly, this is optional, as it will be called when the
+    end-user wishes to use a parameter, but if the Glossia
+    container parameter definition files are not found it will
+    raise RuntimeErrors.
+
+    Args:
+        parameters (dict|str|False|None): this may either be a
+            parameter dictionary or a string filename naming
+            a parameter YAML file. If no parameters are to be
+            loaded, False should be passed (this disables
+            searching in gosmart.parameters).
+            The None option is primarily for testing, to indicate
+            parameters should not be loaded, but the processes
+            should otherwise continue as normal.
+        prefix (str): location of parameter files relative to
+            the simulation working directory. Defaults to
+            ``gosmart._prefix``.
+        check_declared (bool): raise a warning if parameters are
+            subsequently requested that haven't been declared in
+            ``parameters``, even if they exist in the database-sourced
+            parameter files.
+
+    Raises:
+        RuntimeError: if parameters are requested but not found
+            in the filesystem.
+
+    """
     global _parameters, _parameter_info, _prefix, _check_declared
 
     _check_declared = check_declared

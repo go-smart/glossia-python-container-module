@@ -2,6 +2,11 @@ import json
 
 
 def convert_parameter(parameter, typ=None, try_json=True):
+    """Turn a string parameter and type name into a Python object.
+
+    Should be idempotent.
+
+    """
     # Why do we distinguish between numeric classes in Python?!
     # Because we do not want to introduce rounding errors where
     # none are expected by switching a counter to float. Also,
