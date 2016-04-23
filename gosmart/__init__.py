@@ -1,4 +1,5 @@
 import yaml
+import os
 
 _parameters = None
 _parameter_info = None
@@ -12,7 +13,11 @@ except:
     basestring = (str, bytes)
 
 
-def setup(parameters, prefix=None, check_declared=False):
+class GlossiaParameterLoadingError(RuntimeError):
+    pass
+
+
+def setup(parameters=True, prefix=None, check_declared=False):
     """Configure the Glossia Python Container Module (gosmart).
 
     Strictly, this is optional, as it will be called when the
@@ -21,14 +26,15 @@ def setup(parameters, prefix=None, check_declared=False):
     raise RuntimeErrors.
 
     Args:
-        parameters (dict|str|False|None): this may either be a
+        parameters (dict|str|True|False|None): this may either be a
             parameter dictionary or a string filename naming
             a parameter YAML file. If no parameters are to be
             loaded, False should be passed (this disables
             searching in gosmart.parameters).
             The None option is primarily for testing, to indicate
             parameters should not be loaded, but the processes
-            should otherwise continue as normal.
+            should otherwise continue as normal. True indicates
+            that standard locations should be tested.
         prefix (str): location of parameter files relative to
             the simulation working directory. Defaults to
             ``gosmart._prefix``.
@@ -38,7 +44,7 @@ def setup(parameters, prefix=None, check_declared=False):
             parameter files.
 
     Raises:
-        RuntimeError: if parameters are requested but not found
+        GlossiaParameterLoadingError: if parameters are requested but not found
             in the filesystem.
 
     """
@@ -50,6 +56,20 @@ def setup(parameters, prefix=None, check_declared=False):
         _parameters = False
         return
 
+    if parameters is True:
+        possible_locations = (
+            os.path.join('/shared', 'output', 'run', 'parameters.yml'),
+            os.path.join('/shared', 'output', 'parameters.yml'),
+            os.path.join('/shared', 'input', 'parameters.yml'),
+        )
+        for location in possible_locations:
+            try:
+                setup(location, prefix, check_declared)
+            except GlossiaParameterLoadingError:
+                continue
+            else:
+                return
+
     if prefix is not None:
         _prefix = prefix
 
@@ -59,7 +79,7 @@ def setup(parameters, prefix=None, check_declared=False):
                 _parameter_info = yaml.safe_load(f)
                 _parameters = _parameter_info.keys()
         except Exception as e:
-            raise RuntimeError(
+            raise GlossiaParameterLoadingError(
                 "Go-Smart setup argument appears to be a string\n"
                 "(%s)\nbut we cannot read parameters from it: %s" % (parameters, repr(e))
             )
@@ -72,7 +92,7 @@ def setup(parameters, prefix=None, check_declared=False):
                 _parameters = [k for k in parameters]
                 _parameter_info = {k: {} for k in parameters}
             except Exception as e:
-                raise RuntimeError(
+                raise GlossiaParameterLoadingError(
                     "Go-Smart could not understand your parameter "
                     "format for setup. Please use a filename, dict "
                     "or iterable over strings: %s" % repr(e)
