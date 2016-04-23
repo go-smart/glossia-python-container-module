@@ -118,5 +118,5 @@ def load():
 
 try:
     load()
-except FileNotFoundError as e:
+except OSError as e:
     print("Could not load the parameters", e)
