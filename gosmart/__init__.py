@@ -1,5 +1,6 @@
 import yaml
 import os
+import inspect
 
 _parameters = None
 _parameter_info = None
@@ -62,7 +63,12 @@ def setup(parameters=True, prefix=None, check_declared=False):
         return
 
     if parameters is True:
+        calling_frame = inspect.stack()[1]
+        module = inspect.getmodule(calling_frame[0])
+        calling_directory = os.path.dirname(module.__file__)
         possible_locations = (
+            os.path.join(calling_directory, 'parameters.yml'),
+            os.path.join(calling_directory, 'input', 'parameters.yml'),
             os.path.join('/shared', 'output', 'run', 'parameters.yml'),
             os.path.join('/shared', 'output', 'parameters.yml'),
             os.path.join('/shared', 'input', 'parameters.yml'),

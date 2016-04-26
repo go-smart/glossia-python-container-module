@@ -59,7 +59,8 @@ class Region:
         """Check whether this region is in named CDM group."""
         return group in self.groups
 
-    def __init__(self, region_dict):
+    def __init__(self, key, region_dict):
+        self.key = key
         self.idx = region_dict['id'] if 'id' in region_dict else None
         self.groups = region_dict['groups']
 

@@ -76,7 +76,7 @@ class GoSmartParameterLoader:
         self.initiated = True
 
     def _initiate_region_dict(self):
-        R = gosmart.dicts.AttributeDict({k: gosmart.region.Region(v) for k, v in self._region_dict.items()})
+        R = gosmart.dicts.AttributeDict({k: gosmart.region.Region(k, v) for k, v in self._region_dict.items()})
         R.group = gosmart.region.Region.group
         R.meshed_as = gosmart.region.Region.meshed_as
         R.zone = gosmart.region.Region.zone
