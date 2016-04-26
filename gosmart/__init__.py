@@ -4,6 +4,11 @@ _parameters = None
 _parameter_info = None
 _prefix = 'input'
 _check_declared = False
+try : 
+    basestring
+except NameError :
+    basestring = ( str , bytes )
+
 
 
 def setup(parameters, prefix=None, check_declared=False):

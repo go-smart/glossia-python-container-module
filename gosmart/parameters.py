@@ -20,8 +20,8 @@ from __future__ import print_function
 import yaml
 import os
 import gosmart
-from gosmart.dicts import AttributeDict, ParameterDict
-from gosmart.region import Region
+import gosmart.dicts 
+import gosmart.region 
 import gosmart.status
 
 
@@ -69,18 +69,18 @@ class GoSmartParameterLoader:
         self.initiated = True
 
     def _initiate_region_dict(self):
-        R = AttributeDict({k: Region(v) for k, v in self._region_dict.items()})
-        R.group = Region.group
-        R.meshed_as = Region.meshed_as
-        R.zone = Region.zone
-        R.surface = Region.surface
+        R = gosmart.dicts.AttributeDict({k: gosmart.region.Region(v) for k, v in self._region_dict.items()})
+        R.group = gosmart.region.Region.group
+        R.meshed_as = gosmart.region.Region.meshed_as
+        R.zone = gosmart.region.Region.zone
+        R.surface = gosmart.region.Region.surface
         self.R = R
 
     def _initiate_parameter_dict(self):
-        P = ParameterDict()
+        P = gosmart.dicts.ParameterDict()
         P.update(self._parameter_dict)
         self.P = P
-        self.NP = {k: ParameterDict(v) for k, v in self._needle_parameter_dicts.items()}
+        self.NP = {k: gosmart.dicts.ParameterDict(v) for k, v in self._needle_parameter_dicts.items()}
 
 
 R = None
@@ -105,5 +105,5 @@ def load():
     update = gosmart.status.StatusUpdater()
     update_available = update.connect()
 
-
-load()
+if gosmart._parameters is not False :
+    load()
