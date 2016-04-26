@@ -26,6 +26,8 @@ import gosmart.status
 
 
 class GoSmartParameterLoader:
+    """Turn stored parameters (inc. regions) into usable Python objects."""
+
     def __init__(self, prefix):
         self._prefix = prefix
         self.initiated = False
@@ -34,18 +36,22 @@ class GoSmartParameterLoader:
         self._region_dict = {}
 
     def get_parameters(self):
+        """Return both global parameters and a dictionary of needle parameter
+        dictionaries (tuple)."""
         if self.initiated is False:
             raise RuntimeError("Initiate first")
 
         return self.P, self.NP
 
     def get_regions(self):
+        """Return the global region class."""
         if self.initiated is False:
             raise RuntimeError("Initiate first")
 
         return self.R
 
     def get_region_dict(self):
+        """Return the region dict (mostly internal)."""
         if self.initiated is False:
             raise RuntimeError("Initiate first")
 
@@ -63,6 +69,7 @@ class GoSmartParameterLoader:
                 self._region_dict = yaml.safe_load(f)
 
     def initiate(self):
+        """Load and process regions and parameters."""
         self._load_parameters()
         self._initiate_region_dict()
         self._initiate_parameter_dict()
@@ -92,6 +99,9 @@ region_dict = None
 
 
 def load():
+    """Set up the objects that end-users may wish to use from this
+    module directly - especially, R, P and NP."""
+
     global R, P, NP, update, update_available, region_dict
 
     loader = GoSmartParameterLoader(gosmart._prefix)
@@ -105,5 +115,8 @@ def load():
     update = gosmart.status.StatusUpdater()
     update_available = update.connect()
 
-if gosmart._parameters is not False :
+
+try:
     load()
+except OSError as e:
+    print("Could not load the parameters", e)

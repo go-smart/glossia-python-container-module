@@ -147,14 +147,22 @@ def exit(loop, observer=None, future=None):
 
     with open(exit_file, 'w') as f:
         if not future:
-            f.write("-9999\nNo future returned")
+            f.write("1\nNo future returned")
         elif future.result() != 0:
+            target_directory = os.path.join(output_directory, 'run')
+            error_message_path = os.path.join(target_directory, 'error_message')
             try:
-                err_file = os.path.join(log_directory, 'job.err')
-                with open(err_file, 'r') as err:
-                    snippet = '\n'.join(err.readlines()[-10:])
+                with open(error_message_path, 'r') as g:
+                    snippet = g.read().strip()
+                    snippet.encode('ascii', 'xmlcharrefreplace')
+                    snippet.encode('utf-8')
             except:
-                snippet = "Could not retrieve STDERR"
+                try:
+                    err_file = os.path.join(log_directory, 'job.err')
+                    with open(err_file, 'r') as err:
+                        snippet = '\n'.join(err.readlines()[-10:])
+                except:
+                    snippet = "Could not retrieve STDERR"
             f.write('%d\nError in script: %s' % (future.result(), snippet))
         else:
             f.write('0\nOK')
@@ -223,15 +231,18 @@ def cli(target, interpreter, archive, override, static, delay, final, passthroug
     # This two-step approach ensures copying to Glossia is triggered by a move in shared/ and that
     # everything is on the same FS etc. before it happens
     if not static:
+        tmp_output = os.path.join('/shared', 'output.tmp')
         try:
-            os.rename(os.path.join('/shared', final), os.path.join('/shared', 'output.tmp'))
+            os.rename(os.path.join('/shared', final), tmp_output)
         except FileNotFoundError:
-            os.makedirs(os.path.join('/shared', 'output.tmp'))
+            os.makedirs(tmp_output)
 
-        try:
-            os.rename(log_directory, os.path.join('/shared', 'output.tmp', 'logs'))
-        except FileExistsError:
-            logging.warning('Not copying logs to output as directory already exists')
+        if not os.path.abspath(log_directory).startswith(os.path.abspath(os.path.join('/shared', final)) + os.sep):
+            try:
+                os.rename(log_directory, os.path.join(tmp_output, 'logs'))
+            except FileExistsError:
+                logging.warning('Not copying logs to output as directory already exists')
+
         os.rename(os.path.join('/shared', 'output.tmp'), os.path.join('/shared', 'output.final'))
 
     logging.info('Loop closed and exiting...')

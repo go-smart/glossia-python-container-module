@@ -23,6 +23,8 @@ import os
 
 
 class StatusUpdater:
+    """Pass back /short/ information to the client."""
+
     def __init__(self, update_socket_location=None):
         if update_socket_location is None:
             if 'GSSA_STATUS_SOCKET' in os.environ:
@@ -34,6 +36,12 @@ class StatusUpdater:
         self._update_socket_location = update_socket_location
 
     def connect(self):
+        """Attempts to connect to the known update socket.
+
+        This should be the only egress from the container, other
+        than implied communication through the filesystem.
+
+        """
         if self._update_socket_location is None or not os.path.exists(self._update_socket_location):
             return False
 
@@ -41,7 +49,9 @@ class StatusUpdater:
         self._update_socket.connect(self._update_socket_location)
 
     def status(self, message, percentage=None):
-        percentage_string = ''
+        """Pass a status message to the Glossia server (and on to any
+        client) with an optional percentage (float: 0-100)."""
+        percentage_string = b''
 
         if percentage is not None:
             try:
