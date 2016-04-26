@@ -85,7 +85,8 @@ class GoSmartParameterLoader:
 
     def _initiate_parameter_dict(self):
         P = gosmart.dicts.ParameterDict()
-        P.update(self._parameter_dict)
+        if self._parameter_dict:
+            P.update(self._parameter_dict)
         self.P = P
         self.NP = {k: gosmart.dicts.ParameterDict(v) for k, v in self._needle_parameter_dicts.items()}
 
